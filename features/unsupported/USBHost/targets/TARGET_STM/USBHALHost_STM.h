@@ -26,7 +26,7 @@
 #endif
 #endif
 
-#if defined(TARGET_DISCO_F746NG_HS) || defined(TARGET_DISCO_F769NI)
+#if defined(TARGET_DISCO_F746NG_HS) || defined(TARGET_DISCO_F769NI) || defined(TARGET_DISCO_F429ZI)
 #define USBHAL_IRQn  OTG_HS_IRQn
 #else
 #define USBHAL_IRQn  OTG_FS_IRQn
@@ -115,6 +115,11 @@ static gpio_t gpio_powerpin;
 #define USB_POWER_OFF 1
 #define USB_POWERPIN_CONFIG {__HAL_RCC_GPIOC_CLK_ENABLE();gpio_init_out_ex(&gpio_powerpin, PC_9, USB_POWER_OFF);}
 
+#elif defined(TARGET_DISCO_F429ZI)
+#define USB_POWER_ON  0
+#define USB_POWER_OFF 1
+#define USB_POWERPIN_CONFIG {__HAL_RCC_GPIOC_CLK_ENABLE();gpio_init_out_ex(&gpio_powerpin, PC_4, USB_POWER_OFF);}
+
 #else
 #error "USB power pin is not configured !"
 #endif
@@ -148,6 +153,10 @@ USBHALHost::USBHALHost()
     hhcd->Instance = USB_OTG_HS;
     hhcd->Init.speed =  HCD_SPEED_HIGH;
     hhcd->Init.phy_itface = HCD_PHY_ULPI;
+#elif defined(TARGET_DISCO_F429ZI)
+    hhcd->Instance = USB_OTG_HS;
+    hhcd->Init.speed =  HCD_SPEED_HIGH;
+    hhcd->Init.phy_itface = HCD_PHY_EMBEDDED;    
 #else
     hhcd->Instance = USB_OTG_FS;
     hhcd->Init.speed =  HCD_SPEED_FULL;
@@ -263,6 +272,11 @@ USBHALHost::USBHALHost()
     __HAL_RCC_GPIOA_CLK_ENABLE();
     pin_function(PA_11, STM_PIN_DATA(STM_MODE_AF_PP, GPIO_NOPULL, GPIO_AF10_OTG_FS)); // DM
     pin_function(PA_12, STM_PIN_DATA(STM_MODE_AF_PP, GPIO_NOPULL, GPIO_AF10_OTG_FS)); // DP
+    
+#elif defined(TARGET_DISCO_F429ZI)
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+    pin_function(PB_14, STM_PIN_DATA(STM_MODE_AF_PP, GPIO_NOPULL, GPIO_AF12_OTG_HS_FS)); //DM
+    pin_function(PB_15, STM_PIN_DATA(STM_MODE_AF_PP, GPIO_NOPULL, GPIO_AF12_OTG_HS_FS)); //DP
 
 #else
 #error "USB pins are not configured !"
@@ -276,6 +290,8 @@ USBHALHost::USBHALHost()
 
 #if defined(TARGET_DISCO_F746NG_HS) || defined(TARGET_DISCO_F769NI)
     __HAL_RCC_USB_OTG_HS_ULPI_CLK_ENABLE();
+    __HAL_RCC_USB_OTG_HS_CLK_ENABLE();
+#elif defined(TARGET_DISCO_F429ZI)
     __HAL_RCC_USB_OTG_HS_CLK_ENABLE();
 #else
     __HAL_RCC_USB_OTG_FS_CLK_ENABLE();
